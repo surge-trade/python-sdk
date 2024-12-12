@@ -7,7 +7,7 @@ A Python SDK for interacting with the Surge Protocol on the Radix network. This 
 Install the package using pip:
 
 ```bash
-pip install surge-python-sdk
+pip https://github.com/surge-trade/python-sdk.git
 ```
 
 ## Features
