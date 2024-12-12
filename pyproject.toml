@@ -1,0 +1,23 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "surge-python-sdk"
+version = "0.1.0"
+description = "Python SDK for the Surge Protocol"
+readme = "README.md"
+requires-python = ">=3.7"
+license = "MIT"
+dependencies = [
+    "aiohttp",
+    "radix-engine-toolkit",
+]
+
+[project.urls]
+Homepage = "https://github.com/surge-trade/python-sdk"
+Repository = "https://github.com/surge-trade/python-sdk.git"
+Documentation = "https://github.com/surge-trade/python-sdk#readme"
+
+[tool.hatch.build.targets.wheel]
+packages = ["surge"]
