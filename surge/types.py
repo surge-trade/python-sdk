@@ -12,17 +12,38 @@ from enum import Enum, auto
 from dataclasses import dataclass
 
 class RequestClaim(TypedDict):
-    """A claim for removing collateral from a margin account."""
+    """A claim for removing collateral from a margin account.
+    
+    Fields:
+        resource (str): Resource address of the collateral token
+        size (float): Amount of collateral to remove
+    """
     resource: str  # Resource address
     size: float    # Amount to remove
 
 class RemoveCollateralDetails(TypedDict):
-    """Details for a remove collateral request."""
+    """Details for a remove collateral request.
+    
+    Fields:
+        target_account (str): Account address to send collateral to
+        claims (List[RequestClaim]): List of collateral claims to remove
+    """
     target_account: str           # Account to send collateral to
     claims: List[RequestClaim]    # List of claims to remove
 
 class RequestType(str, Enum):
-    """Types of requests that can be made to the protocol."""
+    """Types of requests that can be made to the protocol.
+    
+    Values:
+        REMOVE_COLLATERAL: Request to remove collateral from account
+        MARKET_LONG: Market order to open long position
+        MARKET_SHORT: Market order to open short position 
+        STOP_LONG: Stop order to open long position
+        LIMIT_SHORT: Limit order to open short position
+        LIMIT_LONG: Limit order to open long position
+        STOP_SHORT: Stop order to open short position
+        UNKNOWN: Unknown request type
+    """
     REMOVE_COLLATERAL = 'Remove Collateral'
     MARKET_LONG = 'Market Long'
     MARKET_SHORT = 'Market Short'
@@ -33,7 +54,17 @@ class RequestType(str, Enum):
     UNKNOWN = 'Unknown'
 
 class RequestStatus(str, Enum):
-    """Status of a request in the protocol."""
+    """Status of a request in the protocol.
+    
+    Values:
+        DORMANT: Request is waiting to be activated
+        ACTIVE: Request is active and can be executed
+        EXECUTED: Request has been executed successfully
+        CANCELED: Request was canceled
+        EXPIRED: Request expired before execution
+        FAILED: Request failed during execution
+        UNKNOWN: Unknown status
+    """
     DORMANT = 'Dormant'     # Request is waiting to be activated
     ACTIVE = 'Active'       # Request is active and can be executed
     EXECUTED = 'Executed'   # Request has been executed successfully
@@ -43,7 +74,19 @@ class RequestStatus(str, Enum):
     UNKNOWN = 'Unknown'     # Unknown status
 
 class Position(TypedDict):
-    """A margin trading position."""
+    """A margin trading position.
+
+    Fields:
+        pair (str): Trading pair (e.g. "BTC/USD")
+        size (float): Position size (positive for long, negative for short)
+        value (float): Current value of position
+        entry_price (float): Average entry price
+        mark_price (float): Current market price
+        margin (float): Required margin
+        margin_maintenance (float): Maintenance margin requirement
+        pnl (float): Unrealized profit/loss
+        roi (float): Return on investment (%)
+    """
     pair: str                   # Trading pair (e.g. "BTC/USD")
     size: float                 # Position size (positive for long, negative for short)
     value: float                # Current value of position
@@ -86,11 +129,20 @@ class Position(TypedDict):
         }
 
 class Collateral(TypedDict):
-    """
-    Represents collateral deposited in a margin account.
+    """Represents collateral deposited in a margin account.
     
     Collateral is used to back margin trading positions and can be
     discounted based on the pair it's being used for.
+
+    Fields:
+        pair (str): Pair used to value the collateral
+        resource (str): Resource address of the collateral token
+        mark_price (float): Current market price of the collateral
+        amount (float): Amount of collateral tokens
+        value (float): Total value of collateral (amount * mark_price)
+        discount (float): Discount factor applied to collateral value
+        value_discounted (float): Discounted value used for margin calculations
+        margin (float): Margin contribution of this collateral
     """
     pair: str                 # Pair used to value the collateral
     resource: str             # Resource address of the collateral token
@@ -127,11 +179,22 @@ class Collateral(TypedDict):
         }
 
 class AccountOverview(TypedDict):
-    """
-    Overview of a margin account's financial status.
+    """Overview of a margin account's financial status.
     
     Contains aggregated values and risk metrics calculated from
     the account's positions and collateral.
+
+    Fields:
+        account_value (float): Total account value including PnL
+        account_value_discounted (float): Account value with discounted collateral
+        available_margin (float): Margin available for new positions
+        available_margin_maintenance (float): Margin available before liquidation
+        balance (float): Account balance without positions
+        total_pnl (float): Total unrealized profit/loss
+        total_margin (float): Total margin required
+        total_margin_maintenance (float): Total maintenance margin required
+        total_collateral_value (float): Total value of all collateral
+        total_collateral_value_discounted (float): Total discounted collateral value
     """
     account_value: float                # Total account value including PnL
     account_value_discounted: float     # Account value with discounted collateral
@@ -175,11 +238,20 @@ class AccountOverview(TypedDict):
         }
 
 class PoolDetails(TypedDict):
-    """
-    Details about the protocol's liquidity pool.
+    """Details about the protocol's liquidity pool.
     
     The liquidity pool provides counterparty for all trades and
     collects fees and funding payments.
+
+    Fields:
+        token_amount (str): Real sUSD balance
+        balance (str): Virtual sUSD balance
+        unrealized_pool_funding (str): Unrealized funding payments balance
+        pnl_snap (str): Snapshot of pool's PnL
+        skew_ratio (str): Current pool skew ratio
+        skew_ratio_cap (str): Maximum allowed skew ratio
+        lp_supply (str): Total supply of LP token
+        lp_price (str): Current price of LP token
     """
     token_amount: str              # Real sUSD balance
     balance: str                   # Virtual sUSD balance
@@ -204,11 +276,29 @@ class PoolDetails(TypedDict):
         }
 
 class PairConfig(TypedDict):
-    """
-    Configuration parameters for a trading pair.
+    """Configuration parameters for a trading pair.
     
     These parameters control trading limits, fees, funding rates,
     and other pair-specific behavior.
+
+    Fields:
+        pair (str): Trading pair (e.g. "BTC/USD")
+        price_max_age (int): Maximum age of price data allowed (in seconds)
+        oi_max (float): Maximum open interest allowed per side (in tokens)
+        trade_size_min (float): Minimum trade size (in tokens)
+        update_price_delta_ratio (float): Price threshold for pair update
+        update_period_seconds (float): Time threshold for pair update (in seconds)
+        margin (float): Initial margin requirement
+        margin_maintenance (float): Maintenance margin requirement
+        funding_1 (float): Skew funding rate parameter
+        funding_2 (float): Skew integral funding rate parameter
+        funding_2_delta (float): Skew integral growth rate parameter
+        funding_2_decay (float): Skew integral decay rate parameter
+        funding_pool_0 (float): Constant pool funding rate parameter
+        funding_pool_1 (float): Skew pool funding rate parameter
+        funding_share (float): Share of funding paid to pool
+        fee_0 (float): Base trading fee
+        fee_1 (float): Price impact trading fee
     """
     pair: str                       # Trading pair (e.g. "BTC/USD")
     price_max_age: int              # Maximum age of price data allowed (in seconds)
@@ -251,11 +341,29 @@ class PairConfig(TypedDict):
         }
 
 class PairDetails(TypedDict):
-    """
-    Detailed information about a trading pair's current state.
+    """Detailed information about a trading pair's current state.
     
     Includes open interest, funding rates, and other metrics that
     affect trading conditions.
+
+    Fields:
+        pair (str): Trading pair (e.g. "BTC/USD")
+        oi_long (float): Total long open interest
+        oi_short (float): Total short open interest
+        oi_net (float): Net open interest
+        cost (float): Total cost basis of positions
+        skew (float): Current market skew
+        funding_1 (float): Current base funding amount
+        funding_2 (float): Current secondary funding amount
+        funding_2_raw (float): Raw secondary funding before limits
+        funding_2_max (float): Maximum secondary funding
+        funding_2_min (float): Minimum secondary funding
+        funding_long_apr (float): Annual funding rate for longs
+        funding_long_24h (float): 24h funding rate for longs
+        funding_short_apr (float): Annual funding rate for shorts
+        funding_short_24h (float): 24h funding rate for shorts
+        funding_pool_24h (float): 24h funding rate for pool
+        pair_config (PairConfig): Pair configuration parameters
     """
     pair: str                     # Trading pair (e.g. "BTC/USD")
     oi_long: float                # Total long open interest
@@ -478,11 +586,19 @@ class SlippageLimit:
             return SlippageLimit.absolute(value)
 
 class MarginOrderDetails(TypedDict):
-    """
-    Details of a margin trading order request.
+    """Details of a margin trading order request.
     
     Contains all parameters needed to execute a margin trade,
     including size, limits, and dependencies.
+
+    Fields:
+        pair (str): Trading pair for the order (e.g. "BTC/USD")
+        size (float): Order size (positive=long, negative=short)
+        reduce_only (bool): Whether order can only reduce position
+        limit_price (Optional[PriceLimit]): Optional price limit condition
+        limit_slippage (Optional[SlippageLimit]): Optional slippage limit
+        activate_requests (List[str]): Requests to activate if executed
+        cancel_requests (List[str]): Requests to cancel if executed
     """
     pair: str                                # Trading pair for the order (e.g. "BTC/USD")
     size: float                              # Order size (positive=long, negative=short)
@@ -493,11 +609,18 @@ class MarginOrderDetails(TypedDict):
     cancel_requests: List[str]               # Requests to cancel if executed
 
 class Request(TypedDict):
-    """
-    A request in the protocol's request queue.
+    """A request in the protocol's request queue.
     
     Requests can be for removing collateral or placing orders,
     and can have various states and conditions.
+
+    Fields:
+        type (RequestType): Type of request
+        index (int): Unique request index
+        submission (str): When request was submitted
+        expiry (str): When request expires
+        status (RequestStatus): Current status
+        request_details (Optional[Union[RemoveCollateralDetails, MarginOrderDetails]]): Request-specific details
     """
     type: RequestType              # Type of request
     index: int                     # Unique request index
@@ -632,8 +755,12 @@ class AccountDetails(TypedDict):
         return pair_ids
 
 class Permissions(TypedDict):
-    """
-    Margin account permissions.
+    """Margin account permissions.
+    
+    Fields:
+        level_1 (List[ret.Address]): Level 1 permissions
+        level_2 (List[ret.Address]): Level 2 permissions
+        level_3 (List[ret.Address]): Level 3 permissions
     """
     level_1: List[ret.Address]  # Level 1 permissions
     level_2: List[ret.Address]  # Level 2 permissions
