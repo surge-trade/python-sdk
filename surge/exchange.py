@@ -77,7 +77,6 @@ class Exchange:
         )
 
         result = await self.gateway.preview_transaction(manifest)
-        print(result)
         variables = {}
         for elem in result['receipt']['output'][0]['programmatic_json']['entries']:
             key = elem['key']['value']

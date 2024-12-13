@@ -16,7 +16,7 @@ async def main():
 
 
         # Load exchange variables
-        exchange = Exchange(gateway, oracle)
+        exchange = Exchange(gateway, oracle, env_registry=ret.Address('component_rdx1cr7gxwrvkjfh74f6w5hws7njt9z6ng5uqwdp23x972gx94lfg7cwn4'))
         await exchange.load_variables()
 
         # Fetch various details about the exchange state
