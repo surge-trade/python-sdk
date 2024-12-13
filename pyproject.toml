@@ -10,8 +10,8 @@ readme = "README.md"
 requires-python = ">=3.7"
 license = "MIT"
 dependencies = [
-    "aiohttp",
-    "radix-engine-toolkit",
+    "aiohttp==3.11.10",
+    "radix-engine-toolkit==2.2.0",
 ]
 
 [project.urls]

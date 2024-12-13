@@ -1,6 +1,7 @@
 import radix_engine_toolkit as ret
 from typing import Tuple
 import aiohttp
+import asyncio
 import random
 
 from .api import Api
@@ -99,12 +100,13 @@ class Gateway(Api):
     async def get_transaction_status(self, intent: str) -> dict:
         details = None
         while details is None:
+            await asyncio.sleep(1)
             details = await self.get_transaction_details(intent)
         status = details['transaction']['transaction_status']
         return status
 
-    async def preview_transaction(self, manifest: ret.ManifestBuilder | str) -> dict:
-        if isinstance(manifest, ret.ManifestBuilder):
+    async def preview_transaction(self, manifest: ret.ManifestV1Builder | str) -> dict:
+        if isinstance(manifest, ret.ManifestV1Builder):
             manifest = manifest.build(self.network_id).instructions().as_str()
         body = {
             "manifest": manifest,
@@ -124,7 +126,7 @@ class Gateway(Api):
 
     async def build_transaction(
             self,
-            builder: ret.ManifestBuilder | str, 
+            builder: ret.ManifestV1Builder | str, 
             private_key: ret.PrivateKey,
             epochs_valid: int = 2
         ) -> Tuple[str, str]:
@@ -133,13 +135,13 @@ class Gateway(Api):
         ledger_state = await self.ledger_state()
         epoch = ledger_state['epoch']
 
-        if isinstance(builder, ret.ManifestBuilder):
-            manifest: ret.TransactionManifest = builder.build(self.network_id)
+        if isinstance(builder, ret.ManifestV1Builder):
+            manifest: ret.TransactionManifestV1 = builder.build(self.network_id)
         else:
-            manifest: ret.TransactionManifest = ret.TransactionManifest(ret.Instructions.from_string(builder, self.network_id), [])
+            manifest: ret.TransactionManifestV1 = ret.TransactionManifestV1(ret.InstructionsV1.from_string(builder, self.network_id), [])
 
-        manifest.statically_validate()
-        header: ret.TransactionHeader = ret.TransactionHeader(
+        manifest.statically_validate(self.network_id)
+        header: ret.TransactionHeader = ret.TransactionHeaderV1(
             network_id=self.network_id,
             start_epoch_inclusive=epoch,
             end_epoch_exclusive=epoch + epochs_valid,
@@ -148,15 +150,15 @@ class Gateway(Api):
             notary_is_signatory=False,
             tip_percentage=0,
         )
-        transaction: ret.NotarizedTransaction = (
-            ret.TransactionBuilder()
+        transaction: ret.NotarizedTransactionV1 = (
+            ret.TransactionV1Builder()
                 .header(header)
                 .manifest(manifest)
                 .sign_with_private_key(private_key)
                 .notarize_with_private_key(private_key)
         )
         intent = transaction.intent_hash().as_str()
-        payload = bytearray(transaction.compile()).hex()
+        payload = transaction.to_payload_bytes().hex()
         return payload, intent
     
     async def build_publish_transaction(
@@ -174,8 +176,8 @@ class Gateway(Api):
         ledger_state = await self.ledger_state()
         epoch = ledger_state['epoch']
 
-        manifest: ret.TransactionManifest = (
-            ret.ManifestBuilder().account_lock_fee(account, ret.Decimal('500'))
+        manifest: ret.TransactionManifestV1 = (
+            ret.ManifestV1Builder().account_lock_fee(account, ret.Decimal('500'))
             .package_publish_advanced(
                 owner_role=owner_role,
                 code=code,
@@ -185,8 +187,8 @@ class Gateway(Api):
             )
             .build(self.network_id)
         )
-        manifest.statically_validate()
-        header: ret.TransactionHeader = ret.TransactionHeader(
+        manifest.statically_validate(self.network_id)
+        header: ret.TransactionHeader = ret.TransactionHeaderV1(
             network_id=self.network_id,
             start_epoch_inclusive=epoch,
             end_epoch_exclusive=epoch + epochs_valid,
@@ -195,13 +197,13 @@ class Gateway(Api):
             notary_is_signatory=False,
             tip_percentage=0,
         )
-        transaction: ret.NotarizedTransaction = (
-            ret.TransactionBuilder()
+        transaction: ret.NotarizedTransactionV1 = (
+            ret.TransactionV1Builder()
                 .header(header)
                 .manifest(manifest)
                 .sign_with_private_key(private_key)
                 .notarize_with_private_key(private_key)
         )
         intent = transaction.intent_hash().as_str()
-        payload = bytearray(transaction.compile()).hex()
+        payload = transaction.to_payload_bytes().hex()
         return payload, intent

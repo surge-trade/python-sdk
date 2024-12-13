@@ -510,7 +510,7 @@ class Request(TypedDict):
     def from_json(elem: dict) -> 'Request':
         request = elem['fields']
 
-        index = request[0]['value']
+        index = int(request[0]['value'])
         submission = request[2]['value']
         expiry = request[3]['value']
         status_id = int(request[4]['value'])

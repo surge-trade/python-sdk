@@ -67,7 +67,7 @@ class Exchange:
             "account_package",
         ]
 
-        manifest = ret.ManifestBuilder()
+        manifest = ret.ManifestV1Builder()
         manifest = manifest.call_method(
             ret.ManifestBuilderAddress.STATIC(self.env_registry),
             'get_variables',
@@ -98,7 +98,7 @@ class Exchange:
         Returns:
             AccountDetails containing positions, collateral, and account overview
         """
-        manifest = ret.ManifestBuilder()
+        manifest = ret.ManifestV1Builder()
         manifest = manifest.call_method(
             ret.ManifestBuilderAddress.STATIC(self.exchange_component),
             'get_account_details',
@@ -123,7 +123,7 @@ class Exchange:
         Returns:
             PoolDetails containing pool state and metrics
         """
-        manifest = ret.ManifestBuilder()
+        manifest = ret.ManifestV1Builder()
         manifest = manifest.call_method(
             ret.ManifestBuilderAddress.STATIC(self.exchange_component),
             'get_pool_details',
@@ -143,7 +143,7 @@ class Exchange:
         Returns:
             List of PairDetails containing pair state and configuration
         """
-        manifest = ret.ManifestBuilder()
+        manifest = ret.ManifestV1Builder()
         manifest = manifest.call_method(
             ret.ManifestBuilderAddress.STATIC(self.exchange_component),
             'get_pair_details',
@@ -188,7 +188,7 @@ class Exchange:
         result = result['receipt']['output'][0]['programmatic_json']['fields']
         return Permissions.from_json(result)
     
-    async def create_trading_account(
+    async def create_margin_account(
             self, 
             account: ret.Address, 
             private_key: ret.PrivateKey,
@@ -254,7 +254,7 @@ class Exchange:
             private_key: Private key to sign the transaction
             margin_account: Margin account to create the recovery key for
         """
-        builder = ret.ManifestBuilder()
+        builder = ret.ManifestV1Builder()
         builder = builder.account_lock_fee(account, ret.Decimal('10'))
         builder = builder.call_method(
             ret.ManifestBuilderAddress.STATIC(self.exchange_component),
@@ -264,11 +264,7 @@ class Exchange:
                 ret.ManifestBuilderValue.ADDRESS_VALUE(ret.ManifestBuilderAddress.STATIC(margin_account)),  # Margin account
             ]
         )
-        builder = builder.call_method(
-            ret.ManifestBuilderAddress.STATIC(account),
-            'deposit_batch',
-            [ret.ManifestBuilderValue.EXPRESSION_VALUE(ret.ManifestExpression.ENTIRE_WORKTOP)]
-        )
+        builder = builder.account_deposit_entire_worktop(account)
 
         payload, intent = await self.gateway.build_transaction(builder, private_key)
         await self.gateway.submit_transaction(payload)
@@ -292,7 +288,7 @@ class Exchange:
             resource: Resource address of the collateral to add
             amount: Amount of collateral to add
         """
-        builder = ret.ManifestBuilder()
+        builder = ret.ManifestV1Builder()
         builder = builder.account_lock_fee(account, ret.Decimal('10'))
         builder = builder.account_withdraw(account, resource, amount)
         builder = builder.take_all_from_worktop(resource, ret.ManifestBuilderBucket('bucket1'))
@@ -330,7 +326,7 @@ class Exchange:
             resource: Resource address of the collateral to remove
             amount: Amount of collateral to remove
         """
-        builder = ret.ManifestBuilder()
+        builder = ret.ManifestV1Builder()
         builder = builder.account_lock_fee(account, ret.Decimal('10'))
         builder = builder.call_method(
             ret.ManifestBuilderAddress.STATIC(self.exchange_component),
@@ -377,7 +373,7 @@ class Exchange:
             price_limit: Optional price limit for the order
             slippage_limit: Optional slippage limit for the order
         """
-        builder = ret.ManifestBuilder()
+        builder = ret.ManifestV1Builder()
         builder = builder.account_lock_fee(account, ret.Decimal('10'))
         builder = builder.call_method(
             ret.ManifestBuilderAddress.STATIC(self.exchange_component),
@@ -439,7 +435,7 @@ class Exchange:
         else:
             price_sl = ret.ManifestBuilderValue.ENUM_VALUE(0, [])
 
-        builder = ret.ManifestBuilder()
+        builder = ret.ManifestV1Builder()
         builder = builder.account_lock_fee(account, ret.Decimal('10'))
         builder = builder.call_method(
             ret.ManifestBuilderAddress.STATIC(self.exchange_component),
@@ -480,7 +476,7 @@ class Exchange:
             indexes: List of request indexes to cancel
         """
 
-        builder = ret.ManifestBuilder()
+        builder = ret.ManifestV1Builder()
         builder = builder.account_lock_fee(account, ret.Decimal('10'))
         builder = builder.call_method(
             ret.ManifestBuilderAddress.STATIC(self.exchange_component),
