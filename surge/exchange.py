@@ -87,6 +87,41 @@ class Exchange:
             setattr(self, key, ret.Address(value))
 
         return variables
+    
+    async def available_pairs(self) -> List[str]:
+        """
+        Get all tradable pairs.
+        """
+        page = 0
+        page_size = 50
+        pairs = []
+        while len(pairs) % page_size == 0:
+            manifest = ret.ManifestV1Builder()
+            manifest = manifest.call_method(
+                ret.ManifestBuilderAddress.STATIC(self.exchange_component),
+                'get_pair_configs',
+                [ret.ManifestBuilderValue.U64_VALUE(page_size), ret.ManifestBuilderValue.ENUM_VALUE(1, [ret.ManifestBuilderValue.U64_VALUE(page * page_size)])]
+            )
+            result = await self.gateway.preview_transaction(manifest)
+            result = result['receipt']['output'][0]['programmatic_json']['elements']
+            pairs.extend([pair['fields'][0]['value'] for pair in result])
+            page += 1
+
+        return pairs
+    
+    async def available_collaterals(self) -> List[ret.Address]:
+        """
+        Get all resources that can be used as collateral.
+        """
+        manifest = ret.ManifestV1Builder()
+        manifest = manifest.call_method(
+            ret.ManifestBuilderAddress.STATIC(self.exchange_component),
+            'get_collaterals',
+            []
+        )
+        result = await self.gateway.preview_transaction(manifest)
+        result = result['receipt']['output'][0]['programmatic_json']['elements']
+        return [self.base_resource] + [ret.Address(elem['value']) for elem in result]
         
     async def account_details(self, account: ret.Address) -> AccountDetails:
         """
