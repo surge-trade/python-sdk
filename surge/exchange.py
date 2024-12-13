@@ -122,6 +122,40 @@ class Exchange:
         result = await self.gateway.preview_transaction(manifest)
         result = result['receipt']['output'][0]['programmatic_json']['elements']
         return [self.base_resource] + [ret.Address(elem['value']) for elem in result]
+    
+    async def pair_configs(self) -> List[PairConfig]:
+        """
+        Get all pair configurations.
+        """
+        page = 0
+        page_size = 50
+        pair_configs = []
+        while len(pair_configs) % page_size == 0:
+            manifest = ret.ManifestV1Builder()
+            manifest = manifest.call_method(
+                ret.ManifestBuilderAddress.STATIC(self.exchange_component),
+                'get_pair_configs',
+                [ret.ManifestBuilderValue.U64_VALUE(page_size), ret.ManifestBuilderValue.ENUM_VALUE(1, [ret.ManifestBuilderValue.U64_VALUE(page * page_size)])]
+            )
+            result = await self.gateway.preview_transaction(manifest)
+            result = result['receipt']['output'][0]['programmatic_json']['elements']
+            pair_configs.extend([PairConfig.from_json(elem['fields']) for elem in result])
+            page += 1
+        return pair_configs
+    
+    async def collateral_configs(self) -> List[CollateralConfig]:
+        """
+        Get all collateral configurations.
+        """
+        manifest = ret.ManifestV1Builder()
+        manifest = manifest.call_method(
+            ret.ManifestBuilderAddress.STATIC(self.exchange_component),
+            'get_collateral_configs',
+            []
+        )
+        result = await self.gateway.preview_transaction(manifest)
+        result = result['receipt']['output'][0]['programmatic_json']['entries']
+        return {ret.Address(elem['key']['value']): CollateralConfig.from_json(elem['value']['fields']) for elem in result}
         
     async def account_details(self, account: ret.Address) -> AccountDetails:
         """

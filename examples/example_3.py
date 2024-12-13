@@ -22,9 +22,17 @@ async def main():
         pairs = await exchange.available_pairs()
         print(pairs)
 
+        # Fetch pair configurations
+        pair_configs = await exchange.pair_configs()
+        print(pair_configs)
+
         # Fetch available collaterals
         collaterals = await exchange.available_collaterals()
         print(collaterals)
+
+        # Fetch collateral configurations
+        collateral_configs = await exchange.collateral_configs()
+        print(collateral_configs)
 
 if __name__ == '__main__':
     asyncio.run(main())

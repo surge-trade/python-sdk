@@ -340,6 +340,32 @@ class PairConfig(TypedDict):
             'fee_1': float(fields[16]['value']),
         }
 
+class CollateralConfig(TypedDict):
+    """Configuration parameters for a collateral token.
+    
+    Controls how a token can be used as collateral, including its
+    price feed requirements and risk parameters.
+
+    Fields:
+        pair_id (str): Price feed ID used to value the collateral
+        price_age_max (int): Maximum allowed age of the price in seconds
+        discount (float): Discount factor applied to collateral value (0-1)
+        margin (float): Margin requirement for the collateral
+    """
+    pair_id: str           # Price feed ID used to value the collateral
+    price_age_max: int     # Maximum allowed age of price data in seconds
+    discount: float        # Discount factor applied to collateral value
+    margin: float          # Margin requirement for the collateral
+
+    @staticmethod
+    def from_json(fields: List[dict]) -> 'CollateralConfig':
+        return {
+            'pair_id': fields[0]['value'],
+            'price_age_max': int(fields[1]['value']),
+            'discount': float(fields[2]['value']),
+            'margin': float(fields[3]['value']),
+        }
+
 class PairDetails(TypedDict):
     """Detailed information about a trading pair's current state.
     
