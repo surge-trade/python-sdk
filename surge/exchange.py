@@ -13,7 +13,7 @@ from .tools.gateway import Gateway
 from .tools.oracle import Oracle
 from .types import *
 
-ENV_REGISTRY = ret.Address('component_tdx_2_1czj40n6730x4saae7mnpe20htre57rdwvzvnfcuvcusy9s0jn6qqmf')
+DEFAULT_ENV_REGISTRY = ret.Address('component_rdx1cr7gxwrvkjfh74f6w5hws7njt9z6ng5uqwdp23x972gx94lfg7cwn4')
 
 class Exchange:
     """
@@ -27,7 +27,7 @@ class Exchange:
     - Handle collateral
     """
 
-    def __init__(self, gateway: Gateway, oracle: Oracle, env_registry: ret.Address = ENV_REGISTRY) -> None:
+    def __init__(self, gateway: Gateway, oracle: Oracle, env_registry: ret.Address = DEFAULT_ENV_REGISTRY) -> None:
         """
         Initialize the Exchange interface.
 
@@ -77,6 +77,7 @@ class Exchange:
         )
 
         result = await self.gateway.preview_transaction(manifest)
+        print(result)
         variables = {}
         for elem in result['receipt']['output'][0]['programmatic_json']['entries']:
             key = elem['key']['value']

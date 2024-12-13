@@ -47,7 +47,7 @@ async def main():
         print('RADIX ACCOUNT:', account.as_str())
 
         # Load exchange variables
-        exchange = Exchange(gateway, oracle)
+        exchange = Exchange(gateway, oracle, env_registry=ret.Address('component_tdx_2_1czj40n6730x4saae7mnpe20htre57rdwvzvnfcuvcusy9s0jn6qqmf'))
         await exchange.load_variables()
 
         # Check if user has a margin account, create one if they don't
