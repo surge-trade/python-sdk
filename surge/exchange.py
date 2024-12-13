@@ -111,8 +111,7 @@ class Exchange:
         result = await self.gateway.preview_transaction(manifest)
         result = result['receipt']['output'][0]['programmatic_json']['fields']
 
-        pair_ids = AccountDetails.get_pair_ids(result)
-        prices = await self.oracle.get_prices(pair_ids)
+        prices = await self.oracle.get_prices()
         
         return AccountDetails.from_json(result, prices)
             
@@ -152,7 +151,7 @@ class Exchange:
             ])]
         )
         result = await self.gateway.preview_transaction(manifest)
-        prices = await self.oracle.get_prices(pair_ids)
+        prices = await self.oracle.get_prices()
         
         return [
             PairDetails.from_json(elem, prices) 

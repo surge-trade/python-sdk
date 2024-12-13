@@ -2,35 +2,18 @@ import aiohttp
 from typing import List
 from .api import Api
 
-DEFAULT_ORACLE_URL = 'https://hermes.pyth.network/v2'
+DEFAULT_ORACLE_URL = 'https://oracle.surge.trade'
 
 class Oracle(Api):
     def __init__(self, session: aiohttp.ClientSession, base_url: str = DEFAULT_ORACLE_URL) -> None:
         super().__init__(session, base_url)
 
-    async def get_crypto_feeds(self, pair_ids: List[str]) -> dict:
-        feeds = {}
-        data = await self.get('price_feeds')
-        for pair_id in pair_ids:
-            for feed in data:
-                if pair_id == feed['attributes']['symbol'][7:]:
-                    feeds[pair_id] = feed
-                    break
-
-        return feeds
-
-    async def get_prices(self, pair_ids: List[str]) -> dict:
-        feeds = await self.get_crypto_feeds(pair_ids)
-        feed_ids = {feed['id']:pair_id for pair_id, feed in feeds.items()}
-
+    async def get_prices(self) -> dict:
+        data = await self.get(f'price_latest')
         prices = {}
-        query = '?' + '&'.join([f'ids[]={feed_id}' for feed_id in feed_ids.keys()])
-        data = await self.get(f'updates/price/latest{query}')
-        for update in data['parsed']:
-            pair_id = feed_ids[update['id']]
-            sig = int(update['price']['price'])
-            exp = int(update['price']['expo'])
-            price = sig * 10 ** exp
+        for item in data['prices']:
+            pair_id = item['pair']
+            price = float(item['quote'])
             prices[pair_id] = price
 
         return prices
