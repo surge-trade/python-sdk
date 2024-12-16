@@ -424,9 +424,12 @@ class Exchange:
             margin_account: ret.Address, 
             pair: str, 
             size: ret.Decimal, 
+            delay: int = 0,
+            expiry: int = 10000000000,
             reduce_only: bool = False, 
             price_limit: Optional[PriceLimit] = None, 
-            slippage_limit: Optional[SlippageLimit] = None
+            slippage_limit: Optional[SlippageLimit] = None,
+            status: int = 1
         ) -> None:
         """
         Submit a margin order request.
@@ -437,9 +440,12 @@ class Exchange:
             private_key: Private key to sign the transaction
             pair: Trading pair (e.g. "BTC-USD")
             size: Order size (positive for long, negative for short)
+            delay: Delay in seconds before the order is submitted
+            expiry: Expiry in seconds after the submission when the order will be cancelled
             reduce_only: Whether the order can only reduce position size
             price_limit: Optional price limit for the order
             slippage_limit: Optional slippage limit for the order
+            status: Status of the order (0=dormant, 1=active)
         """
         builder = ret.ManifestV1Builder()
         builder = builder.account_lock_fee(account, ret.Decimal('10'))
@@ -448,8 +454,8 @@ class Exchange:
             'margin_order_request',
             [
                 ret.ManifestBuilderValue.ENUM_VALUE(0, []),  # Fee oath
-                ret.ManifestBuilderValue.U64_VALUE(0),  # Delay seconds
-                ret.ManifestBuilderValue.U64_VALUE(10000000000),  # Expiry seconds
+                ret.ManifestBuilderValue.U64_VALUE(delay),  # Delay seconds
+                ret.ManifestBuilderValue.U64_VALUE(expiry),  # Expiry seconds
                 ret.ManifestBuilderValue.ADDRESS_VALUE(ret.ManifestBuilderAddress.STATIC(margin_account)),  # Margin account
                 ret.ManifestBuilderValue.STRING_VALUE(pair),  # Pair
                 ret.ManifestBuilderValue.DECIMAL_VALUE(size),  # Size
@@ -458,7 +464,7 @@ class Exchange:
                 (slippage_limit or SlippageLimit.none()).to_manifest_value(),  # Slippage limit
                 ret.ManifestBuilderValue.ARRAY_VALUE(ret.ManifestBuilderValueKind.ENUM_VALUE, []),  # Activate requests
                 ret.ManifestBuilderValue.ARRAY_VALUE(ret.ManifestBuilderValueKind.ENUM_VALUE, []), # Cancel requests
-                ret.ManifestBuilderValue.U8_VALUE(1), # Status
+                ret.ManifestBuilderValue.U8_VALUE(status), # Status
             ]
         )
 
@@ -473,6 +479,8 @@ class Exchange:
             margin_account: ret.Address, 
             pair: str, 
             size: ret.Decimal, 
+            delay: int = 0,
+            expiry: int = 10000000000,
             reduce_only: bool = False, 
             price_limit: Optional[PriceLimit] = None, 
             slippage_limit: Optional[SlippageLimit] = None,
@@ -510,8 +518,8 @@ class Exchange:
             'margin_order_tp_sl_request',
             [
                 ret.ManifestBuilderValue.ENUM_VALUE(0, []),  # Fee oath
-                ret.ManifestBuilderValue.U64_VALUE(0),  # Delay seconds
-                ret.ManifestBuilderValue.U64_VALUE(10000000000),  # Expiry seconds
+                ret.ManifestBuilderValue.U64_VALUE(delay),  # Delay seconds
+                ret.ManifestBuilderValue.U64_VALUE(expiry),  # Expiry seconds
                 ret.ManifestBuilderValue.ADDRESS_VALUE(ret.ManifestBuilderAddress.STATIC(margin_account)),  # Margin account
                 ret.ManifestBuilderValue.STRING_VALUE(pair),  # Pair
                 ret.ManifestBuilderValue.DECIMAL_VALUE(size),  # Size
